@@ -25,7 +25,7 @@ def main():
     epochs = config["model"]["epochs"]
     image_size = config["image_size"]
     seed = config["seed"]
-
+    model_path = config["model_path"]
     # ==========================
     # Reproducibility
     # ==========================
@@ -100,5 +100,8 @@ def main():
     plot_accuracy("results.csv")
     plot_loss("results.csv")
     best_model("results.csv")
+
+    model_path = f"checkpoints/{model_name}.pt"
+    torch.save(model.state_dict(), model_path)
 if __name__ == "__main__":
     main()
