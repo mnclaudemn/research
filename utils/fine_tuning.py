@@ -4,6 +4,9 @@ BLOCKS = {
     "resnet50": [ "layer1","layer2","layer3","layer4", "fc"],
 
     "densenet121": ["features.denseblock1", "features.denseblock2","features.denseblock3", "features.denseblock4", "classifier" ]
+    BLOCKS["dino"] = [ "backbone.blocks.0", "backbone.blocks.1","backbone.blocks.2","backbone.blocks.3",
+    "backbone.blocks.4", "backbone.blocks.5", "backbone.blocks.6","backbone.blocks.7","backbone.blocks.8", "backbone.blocks.9",
+    "backbone.blocks.10","backbone.blocks.11", "head" ]
 }
 
 
