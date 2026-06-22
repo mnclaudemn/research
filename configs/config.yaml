@@ -1,1 +1,11 @@
+dataset_root: /content/dataset
 
+model:
+  name: resnet50
+  n_unfreeze: 2
+  lr: 0.0001
+  batch_size: 16
+  epochs: 10
+
+image_size: 224
+seed: 42
