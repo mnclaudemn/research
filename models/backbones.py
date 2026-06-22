@@ -16,8 +16,6 @@ def get_model(name, num_classes):
         return vit_base(num_classes)
 
     if name == "dino":
-        model = dino_vit()
-        model.head = nn.Linear(model.embed_dim, num_classes)
-        return model
+        return dino_vit(num_classes)
 
     raise ValueError("Unknown model")
