@@ -15,18 +15,16 @@ def main():
     # Reproducibility
     # ==========================
     set_seed(42)
-
     # ==========================
     # Device
     # ==========================
     device = "cuda" if torch.cuda.is_available() else "cpu"
-
     # ==========================
     # Dataset Analysis (NEW)
     # ==========================
-    dataset_root = "/content/dataset"
+    dataset_root = dataset_path
 
-    splits, train_ds = analyze_dataset(dataset_path)
+    splits, train_ds = analyze_dataset(dataset_root)
     show_samples(train_ds, num_classes=5)
 
     # ==========================
