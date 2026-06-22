@@ -1,1 +1,12 @@
+experiments:
+  - model: resnet50
+    n_unfreeze: 1
 
+  - model: resnet50
+    n_unfreeze: 2
+
+  - model: densenet121
+    n_unfreeze: 2
+
+  - model: dino
+    n_unfreeze: 2
