@@ -1,1 +1,51 @@
+import torch
+from utils.metrics import compute_metrics
 
+
+def evaluate(model, loader, criterion, device):
+
+    model.eval()
+
+    total_loss = 0
+
+    y_true = []
+    y_pred = []
+    y_prob = []
+
+    with torch.no_grad():
+
+        for x, y in loader:
+            x, y = x.to(device), y.to(device)
+
+            outputs = model(x)
+            loss = criterion(outputs, y)
+
+            total_loss += loss.item()
+
+            # ==========================
+            # probabilities (for AUC)
+            # ==========================
+            probs = torch.softmax(outputs, dim=1)
+
+            _, preds = torch.max(outputs, 1)
+
+            # ==========================
+            # store values
+            # ==========================
+            y_true.extend(y.cpu().numpy())
+            y_pred.extend(preds.cpu().numpy())
+            y_prob.extend(probs.cpu().numpy())
+
+    # ==========================
+    # compute full metrics
+    # ==========================
+    metrics = compute_metrics(
+        y_true=y_true,
+        y_pred=y_pred,
+        y_prob=y_prob,
+        average="macro"   # important for medical multi-class
+    )
+
+    avg_loss = total_loss / len(loader)
+
+    return avg_loss, metrics
