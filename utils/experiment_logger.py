@@ -6,6 +6,7 @@ from datetime import datetime
 class ExperimentLogger:
 
     def __init__(self, file_path="experiments.xlsx"):
+
         self.file_path = file_path
 
         if os.path.exists(file_path):
@@ -13,44 +14,43 @@ class ExperimentLogger:
         else:
             self.df = pd.DataFrame()
 
-    # ==========================
-    # Create unique experiment name
-    # ==========================
     def create_name(self, config):
-
         time = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        return f"{config['model']}_{config['dataset']}_{time}"
+        return f"{config['model']}_{time}"
 
     # ==========================
-    # Add experiment row
+    # MAIN LOG FUNCTION (UPDATED)
     # ==========================
-    def log(self, config, result, model_path):
+    def log(self, config, metrics, loss, model_path):
 
         exp_name = self.create_name(config)
 
         row = {
             "experiment_name": exp_name,
 
-            # dataset info
-            "dataset": config["dataset"],
+            # dataset
+            "dataset": config["dataset_root"],
             "image_size": config["image_size"],
 
-            # model info
+            # model
             "model": config["model"],
             "n_unfreeze": config["n_unfreeze"],
 
-            # training info
+            # training
             "batch_size": config["batch_size"],
             "epochs": config["epochs"],
             "lr": config["lr"],
             "optimizer": config["optimizer"],
 
-            # results
-            "best_accuracy": result["accuracy"],
-            "val_loss": result["val_loss"],
+            # results (NEW)
+            "accuracy": metrics["accuracy"],
+            "f1_score": metrics["f1_score"],
+            "recall": metrics["recall_sensitivity"],
+            "specificity": metrics["specificity"],
+            "auc": metrics["auc"],
+            "val_loss": loss,
 
-            # outputs
+            # output
             "model_path": model_path
         }
 
@@ -62,8 +62,5 @@ class ExperimentLogger:
 
         return exp_name
 
-    # ==========================
-    # Save Excel file
-    # ==========================
     def save(self):
         self.df.to_excel(self.file_path, index=False)
