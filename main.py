@@ -8,12 +8,13 @@ from datasets.medical_dataset import get_loaders
 from models.backbones import get_model
 from utils.fine_tuning import unfreeze_last_n
 from training.engine import train_one_epoch, evaluate
-from utils.visualization import plot_accuracy, plot_loss, best_model
 from utils.experiment_logger import ExperimentLogger
+
+
 def main():
 
     # ==========================
-    # Load Config (KEY FIX)
+    # Load Config
     # ==========================
     config = load_config()
 
@@ -25,25 +26,21 @@ def main():
     epochs = config["model"]["epochs"]
     image_size = config["image_size"]
     seed = config["seed"]
-    model_path = config["model_path"]
-    # ==========================
-    # Reproducibility
-    # ==========================
-    set_seed(seed)
 
     # ==========================
-    # Device
+    # Setup
     # ==========================
+    set_seed(seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # ==========================
-    # Dataset Analysis
+    # Dataset analysis
     # ==========================
     splits, train_ds = analyze_dataset(dataset_root)
     show_samples(train_ds, num_classes=5)
 
     # ==========================
-    # Data
+    # Data loaders
     # ==========================
     train_loader, val_loader, test_loader, num_classes = get_loaders(
         dataset_root=dataset_root,
@@ -76,7 +73,15 @@ def main():
     )
 
     # ==========================
-    # Training
+    # Logger (CREATE EARLY)
+    # ==========================
+    logger = ExperimentLogger()
+
+    best_acc = 0
+    best_metrics = None
+
+    # ==========================
+    # Training loop
     # ==========================
     for epoch in range(epochs):
 
@@ -86,23 +91,49 @@ def main():
 
         eval_loader = val_loader if val_loader is not None else test_loader
 
-        val_loss, acc = evaluate(
+        val_loss, metrics = evaluate(
             model, eval_loader, criterion, device
         )
+
+        acc = metrics["accuracy"]
 
         print(
             f"Epoch [{epoch+1}/{epochs}] "
             f"Train Loss: {train_loss:.4f} | "
             f"Val Loss: {val_loss:.4f} | "
-            f"Acc: {acc:.2f}%"
+            f"Acc: {acc:.2f}"
         )
 
-    plot_accuracy("results.csv")
-    plot_loss("results.csv")
-    best_model("results.csv")
+        # track best
+        if acc > best_acc:
+            best_acc = acc
+            best_metrics = metrics
 
+    # ==========================
+    # Save model
+    # ==========================
     model_path = f"checkpoints/{model_name}.pt"
     torch.save(model.state_dict(), model_path)
-    logger = ExperimentLogger()
+
+    # ==========================
+    # LOG EXPERIMENT (IMPORTANT)
+    # ==========================
+    logger.log(
+        config={
+            "dataset_root": dataset_root,
+            "model": model_name,
+            "n_unfreeze": n_unfreeze,
+            "image_size": image_size,
+            "batch_size": batch_size,
+            "epochs": epochs,
+            "lr": lr,
+            "optimizer": "adam"
+        },
+        metrics=best_metrics,
+        loss=val_loss,
+        model_path=model_path
+    )
+
+
 if __name__ == "__main__":
     main()
