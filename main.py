@@ -8,7 +8,7 @@ from datasets.medical_dataset import get_loaders
 from models.backbones import get_model
 from utils.fine_tuning import unfreeze_last_n
 from training.engine import train_one_epoch, evaluate
-
+from utils.visualization import plot_accuracy, plot_loss, best_model
 
 def main():
 
@@ -97,6 +97,8 @@ def main():
             f"Acc: {acc:.2f}%"
         )
 
-
+    plot_accuracy("results.csv")
+    plot_loss("results.csv")
+    best_model("results.csv")
 if __name__ == "__main__":
     main()
