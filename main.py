@@ -9,7 +9,7 @@ from models.backbones import get_model
 from utils.fine_tuning import unfreeze_last_n
 from training.engine import train_one_epoch, evaluate
 from utils.visualization import plot_accuracy, plot_loss, best_model
-
+from utils.experiment_logger import ExperimentLogger
 def main():
 
     # ==========================
@@ -103,5 +103,6 @@ def main():
 
     model_path = f"checkpoints/{model_name}.pt"
     torch.save(model.state_dict(), model_path)
+    logger = ExperimentLogger()
 if __name__ == "__main__":
     main()
