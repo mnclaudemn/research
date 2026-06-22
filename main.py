@@ -6,6 +6,7 @@ from models.backbones import get_model
 from training.engine import train_one_epoch, evaluate
 from utils.seed import set_seed
 from utils.fine_tuning import unfreeze_last_n
+from utils.dataset_report import analyze_dataset, show_samples
 
 
 def main():
@@ -21,11 +22,18 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # ==========================
-    # Data
+    # Dataset Analysis (NEW)
     # ==========================
-    train_loader, test_loader, num_classes = get_loaders(
-        "/content/train",
-        "/content/test",
+    dataset_root = "/content/dataset"
+
+    splits, train_ds = analyze_dataset(dataset_path)
+    show_samples(train_ds, num_classes=5)
+
+    # ==========================
+    # Data Loaders (FIXED)
+    # ==========================
+    train_loader, val_loader, test_loader, num_classes = get_loaders(
+        dataset_root=dataset_root,
         batch_size=16
     )
 
@@ -35,13 +43,14 @@ def main():
     model_name = "resnet50"
     n_unfreeze = 2
 
-    # Build model
     model = get_model(
         model_name,
         num_classes
     ).to(device)
 
-    # Freeze everything and unfreeze last n blocks
+    # ==========================
+    # Fine-tuning
+    # ==========================
     trainable_blocks = unfreeze_last_n(
         model=model,
         model_name=model_name,
@@ -52,15 +61,12 @@ def main():
     print(f"Trainable blocks: {trainable_blocks}\n")
 
     # ==========================
-    # Loss and Optimizer
+    # Loss & Optimizer
     # ==========================
     criterion = nn.CrossEntropyLoss()
 
     optimizer = torch.optim.Adam(
-        filter(
-            lambda p: p.requires_grad,
-            model.parameters()
-        ),
+        filter(lambda p: p.requires_grad, model.parameters()),
         lr=1e-4
     )
 
@@ -79,15 +85,18 @@ def main():
             device
         )
 
+        # use val if exists, otherwise test
+        eval_loader = val_loader if val_loader is not None else test_loader
+
         val_loss, acc = evaluate(
             model,
-            test_loader,
+            eval_loader,
             criterion,
             device
         )
 
         print(
-            f"Epoch [{epoch + 1}/{epochs}] "
+            f"Epoch [{epoch+1}/{epochs}] "
             f"Train Loss: {train_loss:.4f} | "
             f"Val Loss: {val_loss:.4f} | "
             f"Acc: {acc:.2f}%"
