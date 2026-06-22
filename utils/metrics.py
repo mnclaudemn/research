@@ -1,12 +1,5 @@
 import numpy as np
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    confusion_matrix,
-    roc_auc_score
-)
+from sklearn.metrics import (accuracy_score,precision_score,recall_score,f1_score, confusion_matrix,roc_auc_score)
 
 
 def compute_metrics(y_true, y_pred, y_prob=None, average="binary"):
