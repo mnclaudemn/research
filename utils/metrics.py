@@ -16,9 +16,6 @@ def compute_metrics(
     y_prob=None,
     average="macro"
 ):
-    """
-    Robust medical metrics function (binary + multi-class safe)
-    """
 
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
@@ -60,7 +57,7 @@ def compute_metrics(
     )
 
     # ==========================
-    # AUC (safe handling)
+    # AUC (robust version)
     # ==========================
     auc = None
 
@@ -68,31 +65,39 @@ def compute_metrics(
         try:
             y_prob = np.array(y_prob)
 
-            if len(np.unique(y_true)) > 2:
+            # binary classification
+            if len(np.unique(y_true)) == 2:
+
+                if y_prob.ndim == 2:
+                    y_score = y_prob[:, 1]
+                else:
+                    y_score = y_prob
+
+                auc = roc_auc_score(
+                    y_true,
+                    y_score
+                )
+
+            # multi-class classification
+            else:
+
+                # IMPORTANT: no need for labels param
                 auc = roc_auc_score(
                     y_true,
                     y_prob,
                     multi_class="ovr",
                     average="macro"
                 )
-            else:
-                auc = roc_auc_score(
-                    y_true,
-                    y_prob[:, 1]
-                )
 
         except Exception:
             auc = None
 
-    # ==========================
-    # Return clean dict
-    # ==========================
     return {
-        "accuracy": acc,
-        "precision": prec,
-        "recall": rec,
-        "f1": f1,
-        "balanced_accuracy": bal_acc,
+        "accuracy": float(acc),
+        "precision": float(prec),
+        "recall": float(rec),
+        "f1": float(f1),
+        "balanced_accuracy": float(bal_acc),
         "auc": auc,
         "confusion_matrix": cm
     }
