@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from configs import config
+from configs import load_config
 from utils.seed import set_seed
 from utils.dataset_report import analyze_dataset, show_samples
 from datasets.medical_dataset import get_loaders
