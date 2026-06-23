@@ -48,9 +48,9 @@ def get_loaders(dataset_path, batch_size=16, image_size=224):
     test_ds = datasets.ImageFolder(test_dir, transform=test_tf) if test_dir else None
 
     # loaders
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=torch.cuda.is_available(), persistent_workers=num_workers > 0)
 
-    val_loader = DataLoader(val_ds, batch_size=batch_size) if val_ds else None
-    test_loader = DataLoader(test_ds, batch_size=batch_size) if test_ds else None
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=torch.cuda.is_available(), persistent_workers=num_workers > 0) if val_ds else None
+    test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=torch.cuda.is_available(), persistent_workers=num_workers > 0) if test_ds else None
 
     return train_loader, val_loader, test_loader, len(train_ds.classes)
