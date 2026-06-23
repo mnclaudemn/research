@@ -1,4 +1,9 @@
 import torch
+import numpy as np
+
+
+def _is_cuda(device):
+    return isinstance(device, torch.device) and device.type == "cuda"
 
 
 def train_one_epoch(
@@ -15,22 +20,14 @@ def train_one_epoch(
     all_preds = []
     all_labels = []
 
-    is_cuda = (
-        device == "cuda"
-        or (
-            hasattr(device, "type")
-            and device.type == "cuda"
-        )
-    )
+    is_cuda = _is_cuda(device)
 
     for x, y in loader:
 
         x = x.to(device, non_blocking=True)
-        y = y.to(device, non_blocking=True)
+        y = y.to(device, non_blocking=True).long()
 
-        optimizer.zero_grad(
-            set_to_none=True
-        )
+        optimizer.zero_grad(set_to_none=True)
 
         if scaler is not None:
 
@@ -40,10 +37,7 @@ def train_one_epoch(
                 enabled=is_cuda
             ):
                 outputs = model(x)
-                loss = criterion(
-                    outputs,
-                    y
-                )
+                loss = criterion(outputs, y)
 
             scaler.scale(loss).backward()
             scaler.step(optimizer)
@@ -51,35 +45,23 @@ def train_one_epoch(
 
         else:
             outputs = model(x)
-            loss = criterion(
-                outputs,
-                y
-            )
-
+            loss = criterion(outputs, y)
             loss.backward()
             optimizer.step()
 
         total_loss += loss.item()
 
-        preds = outputs.argmax(dim=1)
+        preds = outputs.detach().argmax(dim=1)
 
-        all_preds.extend(
-            preds.cpu().numpy()
-        )
-
-        all_labels.extend(
-            y.cpu().numpy()
-        )
+        all_preds.extend(preds.cpu().numpy())
+        all_labels.extend(y.detach().cpu().numpy())
 
     metrics = {
-        "y_true": all_labels,
-        "y_pred": all_preds
+        "y_true": np.array(all_labels),
+        "y_pred": np.array(all_preds)
     }
 
-    return (
-        total_loss / len(loader),
-        metrics
-    )
+    return total_loss / max(1, len(loader)), metrics
 
 
 def evaluate(
@@ -94,27 +76,14 @@ def evaluate(
     all_preds = []
     all_labels = []
 
-    is_cuda = (
-        device == "cuda"
-        or (
-            hasattr(device, "type")
-            and device.type == "cuda"
-        )
-    )
+    is_cuda = _is_cuda(device)
 
     with torch.no_grad():
 
         for x, y in loader:
 
-            x = x.to(
-                device,
-                non_blocking=True
-            )
-
-            y = y.to(
-                device,
-                non_blocking=True
-            )
+            x = x.to(device, non_blocking=True)
+            y = y.to(device, non_blocking=True).long()
 
             with torch.amp.autocast(
                 device_type="cuda",
@@ -122,29 +91,18 @@ def evaluate(
                 enabled=is_cuda
             ):
                 outputs = model(x)
-                loss = criterion(
-                    outputs,
-                    y
-                )
+                loss = criterion(outputs, y)
 
             total_loss += loss.item()
 
-            preds = outputs.argmax(dim=1)
+            preds = outputs.detach().argmax(dim=1)
 
-            all_preds.extend(
-                preds.cpu().numpy()
-            )
-
-            all_labels.extend(
-                y.cpu().numpy()
-            )
+            all_preds.extend(preds.cpu().numpy())
+            all_labels.extend(y.detach().cpu().numpy())
 
     metrics = {
-        "y_true": all_labels,
-        "y_pred": all_preds
+        "y_true": np.array(all_labels),
+        "y_pred": np.array(all_preds)
     }
 
-    return (
-        total_loss / len(loader),
-        metrics
-    )
+    return total_loss / max(1, len(loader)), metrics
