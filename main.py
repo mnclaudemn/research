@@ -52,7 +52,7 @@ def main():
     # Model
     # ==========================
     model = get_model(model_name, num_classes).to(device)
-
+    scaler = torch.amp.GradScaler("cuda") if device.type == "cuda" else None
     trainable_blocks = unfreeze_last_n(
         model=model,
         model_name=model_name,
@@ -85,9 +85,7 @@ def main():
     # ==========================
     for epoch in range(epochs):
 
-        train_loss = train_one_epoch(
-            model, train_loader, optimizer, criterion, device
-        )
+        train_loss = train_one_epoch( model, train_loader, optimizer, criterion, device, scaler )
 
         eval_loader = val_loader if val_loader is not None else test_loader
 
