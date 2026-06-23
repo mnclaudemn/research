@@ -11,7 +11,7 @@ from sklearn.metrics import (
 )
 
 
-class ResearchCallbacks:
+class callbacks:
 
     def __init__(
         self,
