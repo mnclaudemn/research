@@ -94,7 +94,7 @@ def main():
     # ==========================
     # Callbacks
     # ==========================
-    cb = ResearchCallbacks(
+    cb = callbacks(
         monitor="val_f1",
         mode="max",
         patience=4,
