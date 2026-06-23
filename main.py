@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 
-from configs import load_config
+from configs.load_config import load_config
 from utils.seed import set_seed
-from utils.dataset_report import analyze_dataset, show_samples
+from datasets.dataset_report import analyze_dataset, show_samples
 from datasets.medical_dataset import get_loaders
 from models.backbones import get_model
 from utils.fine_tuning import unfreeze_last_n
